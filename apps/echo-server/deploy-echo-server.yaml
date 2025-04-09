@@ -1,0 +1,36 @@
+#
+# Run this using kubectl to deploy echo-server
+#
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: echo-server
+  namespace: echo-server
+spec:
+  interval: 1m
+  url: ssh://git@github.com/kalyanmulampaka/kubernetes-fluxcd-echo-server.git
+  ref:
+    branch: main
+  secretRef:
+    name: github-echo-server-secret
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: echo-server
+  namespace: flux-system
+  labels:
+    autoreconcile: "true"
+spec:
+  path: ./apps/echo-server/deploy
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: echo-server
+    namespace: echo-server
+  prune: true
+  wait: true
+  timeout: 9m0s
+  decryption:
+    provider: sops
+  targetNamespace: echo-server
